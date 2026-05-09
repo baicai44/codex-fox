@@ -1,4 +1,5 @@
 import { Response } from "express";
+import { UpstreamResponse } from "./types.js";
 
 export interface ParsedSSELine {
   event?: string;
@@ -49,10 +50,6 @@ export function formatAnthropicSSEEvent(
   }
 
   return "";
-}
-
-export interface UpstreamResponse {
-  body: ReadableStream | null;
 }
 
 export async function streamSSE(
