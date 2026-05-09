@@ -179,13 +179,3 @@ export interface ErrorResponse {
     code?: string;
   };
 }
-
-// ==================== 上游响应 ====================
-
-export interface UpstreamResponse {
-  ok: boolean;
-  status: number;
-  body: ReadableStream<Uint8Array> | null;
-  text: () => Promise<string>;
-  json: () => Promise<unknown>;
-}
