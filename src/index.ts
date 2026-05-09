@@ -4,12 +4,7 @@ import {
   transformOpenAIRequest,
   transformAnthropicRequest,
 } from "./transformers/request.js";
-import {
-  transformToOpenAIResponse,
-  transformToAnthropicResponse,
-} from "./transformers/response.js";
-import { streamSSE, formatOpenAISSEEvent, formatAnthropicSSEEvent } from "./stream.js";
-import { OpenAIChatRequest, AnthropicMessageRequest, UpstreamResponse } from "./types.js";
+import { OpenAIChatRequest, AnthropicMessageRequest } from "./types.js";
 
 const config = loadConfig();
 const app = express();
@@ -29,6 +24,12 @@ app.post("/v1/chat/completions", async (req: Request, res: Response) => {
     };
 
     if (chatRequest.stream) {
+      res.set({
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+      });
+
       const upstreamResponse = await fetch(config.upstreamUrl, {
         method: "POST",
         headers: { ...headers, Accept: "text/event-stream" },
@@ -38,13 +39,22 @@ app.post("/v1/chat/completions", async (req: Request, res: Response) => {
       if (!upstreamResponse.ok) {
         const errorText = await upstreamResponse.text();
         console.error(`[openai/stream] Upstream error ${upstreamResponse.status}:`, errorText);
-        res.status(upstreamResponse.status).json({
-          error: { message: errorText, type: "upstream_error" },
-        });
+        res.status(upstreamResponse.status).end();
         return;
       }
 
-      await streamSSE(res, upstreamResponse as UpstreamResponse, formatOpenAISSEEvent);
+      const reader = upstreamResponse.body!.getReader();
+      const decoder = new TextDecoder();
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          res.write(decoder.decode(value, { stream: true }));
+        }
+      } finally {
+        reader.releaseLock();
+        res.end();
+      }
     } else {
       const upstreamResponse = await fetch(config.upstreamUrl, {
         method: "POST",
@@ -62,8 +72,7 @@ app.post("/v1/chat/completions", async (req: Request, res: Response) => {
       }
 
       const data = await upstreamResponse.json();
-      const transformed = transformToOpenAIResponse(data, chatRequest.model);
-      res.json(transformed);
+      res.json(data);
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -86,6 +95,12 @@ app.post("/v1/messages", async (req: Request, res: Response) => {
     };
 
     if (anthropicRequest.stream) {
+      res.set({
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+      });
+
       const upstreamResponse = await fetch(config.upstreamUrl, {
         method: "POST",
         headers: { ...headers, Accept: "text/event-stream" },
@@ -95,13 +110,22 @@ app.post("/v1/messages", async (req: Request, res: Response) => {
       if (!upstreamResponse.ok) {
         const errorText = await upstreamResponse.text();
         console.error(`[anthropic/stream] Upstream error ${upstreamResponse.status}:`, errorText);
-        res.status(upstreamResponse.status).json({
-          error: { message: errorText, type: "upstream_error" },
-        });
+        res.status(upstreamResponse.status).end();
         return;
       }
 
-      await streamSSE(res, upstreamResponse as UpstreamResponse, formatAnthropicSSEEvent);
+      const reader = upstreamResponse.body!.getReader();
+      const decoder = new TextDecoder();
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          res.write(decoder.decode(value, { stream: true }));
+        }
+      } finally {
+        reader.releaseLock();
+        res.end();
+      }
     } else {
       const upstreamResponse = await fetch(config.upstreamUrl, {
         method: "POST",
@@ -119,8 +143,7 @@ app.post("/v1/messages", async (req: Request, res: Response) => {
       }
 
       const data = await upstreamResponse.json();
-      const transformed = transformToAnthropicResponse(data, anthropicRequest.model);
-      res.json(transformed);
+      res.json(data);
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
