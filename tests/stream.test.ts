@@ -20,6 +20,21 @@ describe("parseSSELine", () => {
     const result = parseSSELine(":comment");
     expect(result).toEqual({});
   });
+
+  it("parses data lines with non-JSON content", () => {
+    const result = parseSSELine("data: [DONE]");
+    expect(result).toEqual({ data: "[DONE]" });
+  });
+
+  it("parses event lines with different event types", () => {
+    const result = parseSSELine("event: response.completed");
+    expect(result).toEqual({ event: "response.completed" });
+  });
+
+  it("handles empty lines", () => {
+    const result = parseSSELine("");
+    expect(result).toEqual({});
+  });
 });
 
 describe("formatOpenAISSEEvent", () => {

@@ -91,7 +91,15 @@ export async function streamSSE(
         }
       }
     }
+  } catch (error) {
+    console.error("SSE stream error:", error);
+    if (!res.writableEnded) {
+      res.end();
+    }
   } finally {
-    res.end();
+    reader.releaseLock();
+    if (!res.writableEnded) {
+      res.end();
+    }
   }
 }
