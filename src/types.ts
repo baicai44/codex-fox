@@ -139,7 +139,7 @@ export interface ResponsesAPIStreamEvent {
 
 // ==================== 出站响应格式 ====================
 
-export interface OpenAIChatCompletionResponse {
+export interface ChatCompletionsResponse {
   id: string;
   object: string;
   created: number;
@@ -156,17 +156,25 @@ export interface OpenAIChatCompletionResponse {
   };
 }
 
-export interface AnthropicMessageResponse {
+// ==================== Responses API 响应 ====================
+
+export interface ResponsesAPIResponse {
   id: string;
-  type: string;
-  role: string;
-  content: Array<{ type: string; text: string }>;
-  model: string;
-  stop_reason: string;
-  stop_sequence?: string | null;
+  object: string;
+  created_at: number;
+  status: string;
+  output: Array<{
+    type: string;
+    role?: string;
+    content: Array<{
+      type: string;
+      text: string;
+    }>;
+  }>;
   usage?: {
     input_tokens: number;
     output_tokens: number;
+    total_tokens: number;
   };
 }
 
