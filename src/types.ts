@@ -185,7 +185,7 @@ export interface ErrorResponse {
 export interface UpstreamResponse {
   ok: boolean;
   status: number;
-  body: ReadableStream | null;
+  body: ReadableStream<Uint8Array> | null;
   text: () => Promise<string>;
   json: () => Promise<unknown>;
 }

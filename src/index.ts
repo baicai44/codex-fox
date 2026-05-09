@@ -36,13 +36,15 @@ app.post("/v1/chat/completions", async (req: Request, res: Response) => {
       });
 
       if (!upstreamResponse.ok) {
+        const errorText = await upstreamResponse.text();
+        console.error(`[openai/stream] Upstream error ${upstreamResponse.status}:`, errorText);
         res.status(upstreamResponse.status).json({
-          error: { message: await upstreamResponse.text(), type: "upstream_error" },
+          error: { message: errorText, type: "upstream_error" },
         });
         return;
       }
 
-      await streamSSE(res, upstreamResponse as unknown as UpstreamResponse, formatOpenAISSEEvent);
+      await streamSSE(res, upstreamResponse as UpstreamResponse, formatOpenAISSEEvent);
     } else {
       const upstreamResponse = await fetch(config.upstreamUrl, {
         method: "POST",
@@ -51,8 +53,10 @@ app.post("/v1/chat/completions", async (req: Request, res: Response) => {
       });
 
       if (!upstreamResponse.ok) {
+        const errorText = await upstreamResponse.text();
+        console.error(`[openai] Upstream error ${upstreamResponse.status}:`, errorText);
         res.status(upstreamResponse.status).json({
-          error: { message: await upstreamResponse.text(), type: "upstream_error" },
+          error: { message: errorText, type: "upstream_error" },
         });
         return;
       }
@@ -74,7 +78,7 @@ app.post("/v1/messages", async (req: Request, res: Response) => {
     const anthropicRequest = req.body as AnthropicMessageRequest;
     const targetModel = anthropicRequest.model.startsWith("claude")
       ? "gpt-4o"
-      : anthropicRequest.model;
+      : "gpt-4o"; // 默认使用 gpt-4o
 
     const responsesRequest = transformAnthropicRequest(anthropicRequest, targetModel);
 
@@ -91,13 +95,15 @@ app.post("/v1/messages", async (req: Request, res: Response) => {
       });
 
       if (!upstreamResponse.ok) {
+        const errorText = await upstreamResponse.text();
+        console.error(`[anthropic/stream] Upstream error ${upstreamResponse.status}:`, errorText);
         res.status(upstreamResponse.status).json({
-          error: { message: await upstreamResponse.text(), type: "upstream_error" },
+          error: { message: errorText, type: "upstream_error" },
         });
         return;
       }
 
-      await streamSSE(res, upstreamResponse as unknown as UpstreamResponse, formatAnthropicSSEEvent);
+      await streamSSE(res, upstreamResponse as UpstreamResponse, formatAnthropicSSEEvent);
     } else {
       const upstreamResponse = await fetch(config.upstreamUrl, {
         method: "POST",
@@ -106,8 +112,10 @@ app.post("/v1/messages", async (req: Request, res: Response) => {
       });
 
       if (!upstreamResponse.ok) {
+        const errorText = await upstreamResponse.text();
+        console.error(`[anthropic] Upstream error ${upstreamResponse.status}:`, errorText);
         res.status(upstreamResponse.status).json({
-          error: { message: await upstreamResponse.text(), type: "upstream_error" },
+          error: { message: errorText, type: "upstream_error" },
         });
         return;
       }
