@@ -76,9 +76,7 @@ app.post("/v1/chat/completions", async (req: Request, res: Response) => {
 app.post("/v1/messages", async (req: Request, res: Response) => {
   try {
     const anthropicRequest = req.body as AnthropicMessageRequest;
-    const targetModel = anthropicRequest.model.startsWith("claude")
-      ? "gpt-4o"
-      : "gpt-4o"; // 默认使用 gpt-4o
+    const targetModel = "gpt-4o";
 
     const responsesRequest = transformAnthropicRequest(anthropicRequest, targetModel);
 
