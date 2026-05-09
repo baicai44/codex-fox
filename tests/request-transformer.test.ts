@@ -69,6 +69,55 @@ describe("transformOpenAIRequest", () => {
       },
     ]);
   });
+
+  it("converts image_url content parts correctly", () => {
+    const input = {
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text" as const, text: "What is this?" },
+            {
+              type: "image_url" as const,
+              image_url: { url: "https://example.com/img.png", detail: "high" },
+            },
+          ],
+        },
+      ],
+    };
+
+    const result = transformOpenAIRequest(input);
+
+    expect(result.input).toEqual([
+      {
+        role: "user",
+        content: [
+          { type: "input_text", text: "What is this?" },
+          {
+            type: "input_image",
+            image_url: "https://example.com/img.png",
+            image_detail: "high",
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("filters out tool role messages", () => {
+    const input = {
+      model: "gpt-4o",
+      messages: [
+        { role: "user", content: "Hello" },
+        { role: "tool", content: "result", tool_call_id: "abc" },
+      ],
+    };
+
+    const result = transformOpenAIRequest(input);
+
+    expect(result.input).toHaveLength(1);
+    expect(result.input[0]).toEqual({ role: "user", content: "Hello" });
+  });
 });
 
 describe("transformAnthropicRequest", () => {

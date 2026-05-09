@@ -11,26 +11,30 @@ import {
 export function transformOpenAIRequest(
   request: OpenAIChatRequest
 ): ResponsesAPIRequest {
-  const input: ResponsesInputItem[] = request.messages.map((msg) => {
-    const content: string | ResponsesContentPart[] =
-      typeof msg.content === "string"
-        ? msg.content
-        : msg.content.map((part): ResponsesContentPart => {
-            if (part.type === "text")
-              return { type: "input_text", text: part.text };
-            if (part.type === "image_url")
-              return {
-                type: "input_image",
-                image_url: part.image_url!.url,
-                image_detail: (part.image_url!.detail || "auto") as "auto" | "low" | "high",
-              };
-            return { type: "input_text", text: JSON.stringify(part) };
-          });
-    return {
-      role: msg.role as "system" | "user" | "assistant",
-      content,
-    };
-  });
+  // Filter out tool role messages — Responses API does not accept role "tool"
+  const input: ResponsesInputItem[] = request.messages
+    .filter((msg) => msg.role !== "tool")
+    .map((msg) => {
+      const content: string | ResponsesContentPart[] =
+        typeof msg.content === "string"
+          ? msg.content
+          : msg.content.map((part): ResponsesContentPart => {
+              if (part.type === "text")
+                return { type: "input_text", text: part.text };
+              if (part.type === "image_url" && part.image_url)
+                return {
+                  type: "input_image",
+                  image_url: part.image_url.url,
+                  image_detail:
+                    (part.image_url.detail || "auto") as "auto" | "low" | "high",
+                };
+              return { type: "input_text", text: JSON.stringify(part) };
+            });
+      return {
+        role: msg.role as "system" | "user" | "assistant",
+        content,
+      };
+    });
 
   return {
     model: request.model,
