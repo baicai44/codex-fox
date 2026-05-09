@@ -77,4 +77,48 @@ describe("transformToAnthropicResponse", () => {
       output_tokens: 3,
     });
   });
+
+  it("handles missing usage field for Anthropic", () => {
+    const input = {
+      id: "resp_no_usage",
+      object: "response",
+      created_at: 1715000000,
+      status: "completed",
+      output: [{ type: "message", role: "assistant", content: [{ type: "output_text", text: "OK" }] }],
+    };
+
+    const result = transformToAnthropicResponse(input, "claude-3-5-sonnet-20241022");
+
+    expect(result.usage).toBeUndefined();
+  });
+});
+
+describe("edge cases", () => {
+  it("handles empty output array for OpenAI", () => {
+    const input = {
+      id: "resp_empty",
+      object: "response",
+      created_at: 1715000000,
+      status: "completed",
+      output: [],
+    };
+
+    const result = transformToOpenAIResponse(input, "gpt-4o");
+
+    expect(result.choices[0].message.content).toBe("");
+  });
+
+  it("handles failed status for OpenAI", () => {
+    const input = {
+      id: "resp_failed",
+      object: "response",
+      created_at: 1715000000,
+      status: "failed",
+      output: [],
+    };
+
+    const result = transformToOpenAIResponse(input, "gpt-4o");
+
+    expect(result.choices[0].finish_reason).toBe("error");
+  });
 });

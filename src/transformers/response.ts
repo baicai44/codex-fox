@@ -12,7 +12,10 @@ export function transformToOpenAIResponse(
     response.output[0]?.content
       ?.filter((c) => c.type === "output_text")
       .map((c) => c.text)
-      .join("\n") || "";
+      .join("\n") ||
+    (response.output[0]?.content?.length
+      ? response.output[0].content.map((c) => JSON.stringify(c)).join("\n")
+      : "");
 
   return {
     id: response.id,
@@ -26,7 +29,12 @@ export function transformToOpenAIResponse(
           role: response.output[0]?.role || "assistant",
           content: textContent,
         },
-        finish_reason: "stop",
+        finish_reason:
+          response.status === "completed"
+            ? "stop"
+            : response.status === "failed"
+            ? "error"
+            : "stop",
       },
     ],
     usage: response.usage
@@ -54,7 +62,12 @@ export function transformToAnthropicResponse(
     role: response.output[0]?.role || "assistant",
     content: textContent.map((t) => ({ type: "text", text: t })),
     model,
-    stop_reason: "end_turn",
+    stop_reason:
+      response.status === "completed"
+        ? "end_turn"
+        : response.status === "failed"
+        ? "error"
+        : "end_turn",
     stop_sequence: null,
     usage: response.usage
       ? {
