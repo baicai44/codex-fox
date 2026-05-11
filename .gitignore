@@ -1,4 +1,19 @@
+# 忽略所有源码
+src/
+electron/
 node_modules/
 dist/
-.env
+package.json
+package-lock.json
+tsconfig.json
 *.log
+*.ts
+build/
+build-log.txt
+temp-*
+
+# 忽略构建输出中的敏感文件
+**/.env
+
+# 追踪打包产物
+!dist-app/
