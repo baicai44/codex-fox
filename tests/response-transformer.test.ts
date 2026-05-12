@@ -29,6 +29,7 @@ describe("transformToResponsesAPI", () => {
     expect(result.created_at).toBe(1715000000);
     expect(result.status).toBe("completed");
     expect(result.output[0]).toEqual({
+      id: "resp_abc123_msg",
       type: "message",
       role: "assistant",
       content: [{ type: "output_text", text: "Hello there!" }],

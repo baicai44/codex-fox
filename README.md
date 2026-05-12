@@ -59,6 +59,18 @@ Codex-Fox 自动将 Codex 的模型名映射到 DeepSeek 模型：
 | `deepseek-chat` | DeepSeek V3 | ✅ |
 | `deepseek-v4-pro` | DeepSeek V4 Pro | ❌ |
 
+### 自定义模型映射
+
+在 **🗺️ 模型映射** 面板中可以添加任意模型映射：
+
+| Codex 模型名 | 上游模型名 | 说明 |
+|:---|:---|:---|
+| `claude-sonnet-4` | `claude-3-5-sonnet` | 接入 Claude 兼容服务 |
+| `qwen-max` | `qwen-max-latest` | 接入通义千问 |
+| `gpt-5.2` | `qwen-plus` | 覆盖默认，改用千问 |
+
+保存后重启服务即可生效。Codex 会自动识别这些自定义模型。
+
 ---
 
 ## 架构

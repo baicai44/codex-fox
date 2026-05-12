@@ -1,12 +1,31 @@
 {
-  "name": "protocol-proxy",
+  "name": "codex-fox",
   "version": "1.0.0",
+  "description": "Codex Desktop DeepSeek Protocol Proxy",
+  "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
-    "dev": "nodemon --exec ts-node src/index.ts",
+    "dev": "nodemon --exec tsx src/index.ts",
     "build": "tsc",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "electron:dev": "electron .",
+    "electron:build": "electron-builder --win portable"
+  },
+  "build": {
+    "appId": "com.codex-fox.proxy",
+    "productName": "Codex-Fox",
+    "directories": { "output": "dist-app" },
+    "files": [
+      "electron/**/*",
+      "dist/**/*",
+      "package.json",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": "portable",
+      "icon": null
+    }
   },
   "dependencies": {
     "dotenv": "^17.4.2",
@@ -15,8 +34,10 @@
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^25.6.2",
+    "electron": "^42.0.1",
+    "electron-builder": "^26.8.1",
     "nodemon": "^3.1.14",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.5"
   }

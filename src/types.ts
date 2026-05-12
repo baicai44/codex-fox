@@ -1,3 +1,46 @@
+// ==================== Chat Completions 格式（DeepSeek 等兼容服务） ====================
+
+export interface ChatCompletionsToolCallFunction {
+  name: string;
+  arguments: string;
+}
+
+export interface ChatCompletionsToolCall {
+  id: string;
+  type: "function";
+  function: ChatCompletionsToolCallFunction;
+}
+
+export interface ChatCompletionsMessage {
+  role: "system" | "user" | "assistant" | "tool";
+  content: string | Array<{ type: string; text?: string; image_url?: any }> | null;
+  tool_call_id?: string;
+  name?: string;
+  tool_calls?: ChatCompletionsToolCall[];
+}
+
+export interface ChatCompletionsTool {
+  type: "function";
+  function: {
+    name: string;
+    description?: string;
+    parameters: Record<string, unknown>;
+  };
+}
+
+export interface ChatCompletionsRequest {
+  model: string;
+  messages: ChatCompletionsMessage[];
+  tools?: ChatCompletionsTool[];
+  temperature?: number;
+  max_tokens?: number;
+  top_p?: number;
+  frequency_penalty?: number;
+  presence_penalty?: number;
+  stop?: string | string[];
+  stream?: boolean;
+}
+
 // ==================== OpenAI Chat Completions 入站 ====================
 
 export interface OpenAIChatMessage {
@@ -74,15 +117,29 @@ export interface AnthropicMessageRequest {
 // ==================== OpenAI Responses API ====================
 
 export interface ResponsesInputItem {
-  role: "system" | "user" | "assistant";
-  content: string | Array<ResponsesContentPart>;
+  role?: "system" | "user" | "assistant";
+  content?: string | ResponsesContentPart[];
+  type?: "function_call_output" | "function_call";
+  call_id?: string;
+  output?: string;
+  name?: string;
+  arguments?: string;
 }
 
 export interface ResponsesContentPart {
-  type: "input_text" | "input_image";
+  type: "input_text" | "input_image" | "function_call";
   text?: string;
   image_url?: string;
   image_detail?: "auto" | "low" | "high";
+  call_id?: string;
+  name?: string;
+  arguments?: string;
+}
+
+export interface ResponsesFunctionCallOutputItem {
+  type: "function_call_output";
+  call_id: string;
+  output: string;
 }
 
 export interface ResponsesTool {
@@ -103,6 +160,8 @@ export interface ResponsesAPIRequest {
   presence_penalty?: number;
   stop?: string | string[];
   stream?: boolean;
+  /** reasoning effort for reasoning models */
+  reasoning?: { effort?: "low" | "medium" | "high" };
 }
 
 // ==================== Responses API 响应 ====================
@@ -112,14 +171,25 @@ export interface ResponsesAPIResponse {
   object: string;
   created_at: number;
   status: string;
-  output: Array<{
-    type: string;
-    role?: string;
-    content: Array<{
-      type: string;
-      text: string;
-    }>;
-  }>;
+  model?: string;
+  output: Array<
+    | {
+        type: "message";
+        id?: string;
+        role?: string;
+        content: Array<
+          | { type: "output_text"; text: string }
+          | { type: "reasoning_text"; text: string }
+        >;
+      }
+    | {
+        type: "function_call";
+        id?: string;
+        call_id: string;
+        name: string;
+        arguments: string;
+      }
+  >;
   usage?: {
     input_tokens: number;
     output_tokens: number;
@@ -146,34 +216,21 @@ export interface ChatCompletionsResponse {
   model: string;
   choices: Array<{
     index: number;
-    message: { role: string; content: string };
+    message: {
+      role: string;
+      content: string | null;
+      reasoning_content?: string;
+      tool_calls?: Array<{
+        id: string;
+        type: "function";
+        function: { name: string; arguments: string };
+      }>;
+    };
     finish_reason: string;
   }>;
   usage?: {
     prompt_tokens: number;
     completion_tokens: number;
-    total_tokens: number;
-  };
-}
-
-// ==================== Responses API 响应 ====================
-
-export interface ResponsesAPIResponse {
-  id: string;
-  object: string;
-  created_at: number;
-  status: string;
-  output: Array<{
-    type: string;
-    role?: string;
-    content: Array<{
-      type: string;
-      text: string;
-    }>;
-  }>;
-  usage?: {
-    input_tokens: number;
-    output_tokens: number;
     total_tokens: number;
   };
 }
