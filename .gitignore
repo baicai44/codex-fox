@@ -16,4 +16,4 @@ temp-*
 **/.env
 
 # 追踪打包产物
-!dist-app/
+!release-build/
